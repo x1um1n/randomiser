@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/x1um1n/checkerr"
@@ -75,8 +76,12 @@ func main() {
 	}
 	fmt.Printf("\nIs this ok?\n")
 	if askForConfirmation() {
-		wd, _ := os.Getwd()
-		os.Chdir(wd + "/" + dir)
+		if strings.HasPrefix(dir, "/") { //absolute path
+			os.Chdir(dir)
+		} else { //relative path
+			wd, _ := os.Getwd()
+			os.Chdir(wd + "/" + dir)
+		}
 		for _, r := range outfiles {
 			if _, err := os.Stat(r.new); os.IsNotExist(err) {
 				fmt.Printf("Renaming %s to %s\n", r.old, r.new)
