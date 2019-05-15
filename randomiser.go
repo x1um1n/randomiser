@@ -36,6 +36,7 @@ func askForConfirmation() bool {
 }
 
 // shamelessly stolen from https://gist.github.com/albrow/5882501
+// used by askForConfirmation
 func containsString(slice []string, element string) bool {
 	for _, elem := range slice {
 		if elem == element {
