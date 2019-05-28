@@ -8,6 +8,7 @@ import (
 	"os"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/x1um1n/checkerr"
 )
@@ -17,12 +18,12 @@ type rnam struct {
 }
 
 // shamelessly stolen from https://gist.github.com/albrow/5882501
+// updated to use checkerr
 func askForConfirmation() bool {
 	var response string
 	_, err := fmt.Scanln(&response)
-	if err != nil {
-		log.Fatal(err)
-	}
+	checkerr.CheckFatal(err, "error reading response from command line")
+
 	okayResponses := []string{"y", "Y", "yes", "Yes", "YES"}
 	nokayResponses := []string{"n", "N", "no", "No", "NO"}
 	if containsString(okayResponses, response) {
@@ -60,12 +61,15 @@ func main() {
 
 	l := len(infiles) //get the initial length of infiles
 	for i := 0; i < l; i++ {
-		ido := rand.Intn(len(infiles)) //pick an element at random
-		fnam := infiles[ido].Name()    //get the current filename
-		idx := fmt.Sprintf("%03d", i)  //create a new 3-digit index marker
+		ido := rand.Intn(len(infiles))                      //pick an element at random
+		fnam := infiles[ido].Name()                         //get the current filename
+		idx := fmt.Sprintf("%03d", i)                       //create a new 3-digit index marker
+		s := strings.TrimLeftFunc(fnam, func(r rune) bool { //trim any leading runes that are not letters, which allows for re-sorting
+			return !unicode.IsLetter(r)
+		})
 		f := rnam{
 			old: fnam,
-			new: idx + " " + fnam,
+			new: idx + " " + s,
 		}
 		outfiles = append(outfiles, f)
 		infiles = append(infiles[:ido], infiles[ido+1:]...) //remove the element from infiles so we don't get dupes
@@ -89,7 +93,11 @@ func main() {
 				err := os.Rename(r.old, r.new)
 				checkerr.CheckFatal(err)
 			} else {
-				log.Fatalf("Can't rename %s to %s, %s already exists..", r.old, r.new, r.new)
+				fmt.Printf("Can't rename %s to %s, %s already exists..\n", r.old, r.new, r.new)
+				fmt.Printf("\nContinue to next file?\n")
+				if !askForConfirmation() {
+					log.Fatalln("Exiting...")
+				}
 			}
 		}
 	} else {
