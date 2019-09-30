@@ -11,9 +11,9 @@ randomiser <relative/or/absolute/path/to/the/dir>
 ### build/install instructions
 If you haven't already got golang installed, first follow this guide: https://golang.org/doc/install
 ```
-##fetch required packages:
-go get github.com/x1um1n/checkerr
-
 ##build:
 go build randomiser.go
+
+##install:
+mv randomiser /usr/local/bin/ 
 ```
