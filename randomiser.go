@@ -49,8 +49,8 @@ func containsString(slice []string, element string) bool {
 }
 
 // rename builds a slice containing all the filenames in the dir then picks an
-// element at random, prefixes it with an index value and stores it in the
-// outfiles slice.
+// element at random, strips any non-alpha runes from the start of the string,
+// prefixes it with an index value and stores it in the outfiles slice.
 //
 // if the user confirms they are happy with the new sort order, the files are
 // renamed accordingly
@@ -58,6 +58,7 @@ func rename(dir string) {
 	var outfiles []rnam              //slice used to store rename params
 	rand.Seed(time.Now().UnixNano()) //seed the random num generator
 
+	fmt.Printf("\nReading filenames in %s\n\n", dir)
 	infiles, err := ioutil.ReadDir(dir) //attempt to build a slice containing the files in the dir
 	checkerr.CheckFatal(err, "Error reading dir contents")
 
@@ -112,6 +113,7 @@ func rename(dir string) {
 func strip(dir string) {
 	var outfiles []rnam              //slice used to store rename params
 
+	fmt.Printf("\nReading filenames in %s\n\n", dir)
 	infiles, err := ioutil.ReadDir(dir) //attempt to build a slice containing the files in the dir
 	checkerr.CheckFatal(err, "Error reading dir contents")
 
@@ -160,11 +162,12 @@ func strip(dir string) {
 
 // usage prints usage info
 func usage() {
+	fmt.Printf("\nRandomiser renames all the files in the target directory to include a randomly generated index prefix.\n\n")
 	fmt.Printf("Usage: randomiser [-strip] </dir/to/be/sorted>\n\n")
 }
 
 func main() {
-	stripP := flag.Bool("strip", false, "Strip index and restore original sort order.")
+	stripP := flag.Bool("strip", false, "Strip index and restore original sort order")
 	flag.Parse()
 
 	if len(os.Args) == 1 { //no arguments, so print usage and exit
