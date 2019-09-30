@@ -37,11 +37,10 @@ func askForConfirmation() bool {
 	}
 }
 
-// shamelessly stolen from https://gist.github.com/albrow/5882501
-// used by askForConfirmation
-func containsString(slice []string, element string) bool {
-	for _, elem := range slice {
-		if elem == element {
+// containsString checks to see if a string is contained within a slice of strings
+func containsString(s []string, el string) bool {
+	for _, e := range s {
+		if e == el {
 			return true
 		}
 	}
@@ -111,7 +110,7 @@ func rename(dir string) {
 // strip removes index numbers from a previously sorted dir, after checking
 // with the user
 func strip(dir string) {
-	var outfiles []rnam              //slice used to store rename params
+	var outfiles []rnam //slice used to store rename params
 
 	fmt.Printf("\nReading filenames in %s\n\n", dir)
 	infiles, err := ioutil.ReadDir(dir) //attempt to build a slice containing the files in the dir
@@ -119,7 +118,7 @@ func strip(dir string) {
 
 	l := len(infiles) //get the initial length of infiles
 	for i := 0; i < l; i++ {
-		fnam := infiles[i].Name()                         //get the current filename
+		fnam := infiles[i].Name()                           //get the current filename
 		s := strings.TrimLeftFunc(fnam, func(r rune) bool { //trim any leading runes that are not letters, which allows for re-sorting
 			return !unicode.IsLetter(r)
 		})
