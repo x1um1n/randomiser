@@ -48,7 +48,12 @@ func containsString(slice []string, element string) bool {
 	return false
 }
 
-// rename builds a slice containing all the filenames in the dir
+// rename builds a slice containing all the filenames in the dir then picks an
+// element at random, prefixes it with an index value and stores it in the
+// outfiles slice.
+//
+// if the user confirms they are happy with the new sort order, the files are
+// renamed accordingly
 func rename(dir string) {
 	var outfiles []rnam              //slice used to store rename params
 	rand.Seed(time.Now().UnixNano()) //seed the random num generator
@@ -102,6 +107,58 @@ func rename(dir string) {
 	}
 }
 
+// strip removes index numbers from a previously sorted dir, after checking
+// with the user
+func strip(dir string) {
+	var outfiles []rnam              //slice used to store rename params
+
+	infiles, err := ioutil.ReadDir(dir) //attempt to build a slice containing the files in the dir
+	checkerr.CheckFatal(err, "Error reading dir contents")
+
+	l := len(infiles) //get the initial length of infiles
+	for i := 0; i < l; i++ {
+		fnam := infiles[i].Name()                         //get the current filename
+		s := strings.TrimLeftFunc(fnam, func(r rune) bool { //trim any leading runes that are not letters, which allows for re-sorting
+			return !unicode.IsLetter(r)
+		})
+		f := rnam{
+			old: fnam,
+			new: s,
+		}
+		outfiles = append(outfiles, f)
+	}
+
+	//get the human to confirm this is ok
+	for _, r := range outfiles {
+		fmt.Printf("Rename %s to %s\n", r.old, r.new)
+	}
+	fmt.Printf("\nIs this ok?\n")
+	if askForConfirmation() {
+		if strings.HasPrefix(dir, "/") { //absolute path
+			os.Chdir(dir)
+		} else { //relative path
+			wd, _ := os.Getwd()
+			os.Chdir(wd + "/" + dir)
+		}
+		for _, r := range outfiles {
+			if _, err := os.Stat(r.new); os.IsNotExist(err) {
+				fmt.Printf("Renaming %s to %s\n", r.old, r.new)
+				err := os.Rename(r.old, r.new)
+				checkerr.CheckFatal(err)
+			} else {
+				fmt.Printf("Can't rename %s to %s, %s already exists..\n", r.old, r.new, r.new)
+				fmt.Printf("\nContinue to next file?\n")
+				if !askForConfirmation() {
+					log.Fatalln("Exiting...")
+				}
+			}
+		}
+	} else {
+		fmt.Println("Exiting without applying changes...")
+	}
+}
+
+// usage prints usage info
 func usage() {
 	fmt.Printf("Usage: randomiser [-strip] </dir/to/be/sorted>\n\n")
 }
@@ -122,8 +179,8 @@ func main() {
 		checkerr.CheckFatal(err, "Dir does not exist")
 	}
 
-	if *stripP {
-		// strip the indexes
+	if *stripP { // strip the indexes
+		strip(dir)
 		os.Exit(0)
 	}
 
