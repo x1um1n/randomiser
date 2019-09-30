@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -47,14 +48,10 @@ func containsString(slice []string, element string) bool {
 	return false
 }
 
-func main() {
+// rename builds a slice containing all the filenames in the dir
+func rename(dir string) {
 	var outfiles []rnam              //slice used to store rename params
 	rand.Seed(time.Now().UnixNano()) //seed the random num generator
-
-	dir := os.Args[1]                               //get the dir to randomise from cli args
-	if _, err := os.Stat(dir); os.IsNotExist(err) { //sanity check the input is actually a dir
-		checkerr.CheckFatal(err, "Dir does not exist")
-	}
 
 	infiles, err := ioutil.ReadDir(dir) //attempt to build a slice containing the files in the dir
 	checkerr.CheckFatal(err, "Error reading dir contents")
@@ -103,4 +100,32 @@ func main() {
 	} else {
 		fmt.Println("Exiting without applying changes...")
 	}
+}
+
+func usage() {
+	fmt.Printf("Usage: randomiser [-strip] </dir/to/be/sorted>\n\n")
+}
+
+func main() {
+	stripP := flag.Bool("strip", false, "Strip index and restore original sort order.")
+	flag.Parse()
+
+	if len(os.Args) == 1 { //no arguments, so print usage and exit
+		usage()
+		flag.PrintDefaults()
+		fmt.Printf("\n")
+		os.Exit(1)
+	}
+
+	dir := os.Args[len(os.Args)-1]                  //get the dir to randomise from cli args
+	if _, err := os.Stat(dir); os.IsNotExist(err) { //sanity check the input is actually a dir
+		checkerr.CheckFatal(err, "Dir does not exist")
+	}
+
+	if *stripP {
+		// strip the indexes
+		os.Exit(0)
+	}
+
+	rename(dir)
 }
